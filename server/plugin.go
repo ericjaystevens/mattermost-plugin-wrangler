@@ -1,13 +1,17 @@
 package main
 
 import (
+	"io/ioutil"
 	"sync"
 
 	"github.com/pkg/errors"
 
+	"github.com/ericjaystevens/slashparse"
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
 )
+
+const configPath = "wrangler.yaml"
 
 // Plugin implements the interface expected by the Mattermost server to communicate between the server and plugin processes.
 type Plugin struct {
@@ -21,6 +25,7 @@ type Plugin struct {
 	// configuration is the active plugin configuration. Consult getConfiguration and
 	// setConfiguration for usage.
 	configuration *configuration
+	slashCommand  slashparse.SlashCommand
 }
 
 // BuildHash is the full git hash of the build.
@@ -55,6 +60,16 @@ func (p *Plugin) OnActivate() error {
 		return errors.Wrap(err, "failed to ensure Wrangler bot")
 	}
 	p.BotUserID = botID
+
+	slashDef, err := ioutil.ReadFile(configPath)
+	if err != nil {
+		return err
+	}
+
+	p.slashCommand, err = slashparse.NewSlashCommand(slashDef)
+	if err != nil {
+		return err
+	}
 
 	return p.API.RegisterCommand(getCommand(config.CommandAutoCompleteEnable))
 }

@@ -68,59 +68,33 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 
 	stringArgs := strings.Split(args.Command, " ")
 
-	if len(stringArgs) < 2 {
-		return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, getHelp()), nil
-	}
+	wranglerParser := p.slashCommand
 
-	command := stringArgs[1]
+	//TODO: will add the values as a next step
+	slashCommand, _, err := wranglerParser.Parse(args.Command)
+	if err != nil {
+		return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, err.Error()), nil
+	}
 
 	var handler func([]string, *model.CommandArgs) (*model.CommandResponse, bool, error)
 
-	switch command {
-	case "move":
-		if len(stringArgs) < 3 {
-			break
-		}
-
-		switch stringArgs[2] {
-		case "thread":
-			handler = p.runMoveThreadCommand
-			stringArgs = stringArgs[3:]
-		}
-	case "copy":
-		if len(stringArgs) < 3 {
-			break
-		}
-
-		switch stringArgs[2] {
-		case "thread":
-			handler = p.runCopyThreadCommand
-			stringArgs = stringArgs[3:]
-		}
-	case "attach":
-		if len(stringArgs) < 3 {
-			break
-		}
-
-		switch stringArgs[2] {
-		case "message":
-			handler = p.runAttachMessageCommand
-			stringArgs = stringArgs[3:]
-		}
-	case "list":
-		if len(stringArgs) < 3 {
-			break
-		}
-
-		switch stringArgs[2] {
-		case "channels":
-			handler = p.runListChannelsCommand
-			stringArgs = stringArgs[3:]
-		case "messages":
-			handler = p.runListMessagesCommand
-			stringArgs = stringArgs[3:]
-		}
-	case "info":
+	switch slashCommand {
+	case "wrangler move thread":
+		handler = p.runMoveThreadCommand
+		stringArgs = stringArgs[3:]
+	case "wrangler copy thread":
+		handler = p.runCopyThreadCommand
+		stringArgs = stringArgs[3:]
+	case "wrangler attach message":
+		handler = p.runAttachMessageCommand
+		stringArgs = stringArgs[3:]
+	case "wrangler list channels":
+		handler = p.runListChannelsCommand
+		stringArgs = stringArgs[3:]
+	case "wrangler list messages":
+		handler = p.runListMessagesCommand
+		stringArgs = stringArgs[3:]
+	case "wrangler info":
 		handler = p.runInfoCommand
 		stringArgs = stringArgs[2:]
 	}

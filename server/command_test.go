@@ -1,8 +1,10 @@
 package main
 
 import (
+	"io/ioutil"
 	"testing"
 
+	"github.com/ericjaystevens/slashparse"
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
 	"github.com/mattermost/mattermost-server/v5/plugin/plugintest"
@@ -25,6 +27,12 @@ func TestCommand(t *testing.T) {
 
 	var plugin Plugin
 	plugin.SetAPI(api)
+	configPath := `/home/ec2-user/code/mattermost-plugin-wrangler/wrangler.yaml`
+	slashDef, err := ioutil.ReadFile(configPath)
+	if err != nil {
+		t.Error()
+	}
+	plugin.slashCommand, _ = slashparse.NewSlashCommand(slashDef)
 
 	t.Run("args", func(t *testing.T) {
 		t.Run("no args", func(t *testing.T) {
@@ -38,14 +46,14 @@ func TestCommand(t *testing.T) {
 			args := &model.CommandArgs{Command: "one"}
 			resp, appErr := plugin.ExecuteCommand(context, args)
 			require.Nil(t, appErr)
-			require.Equal(t, resp.Text, getHelp())
+			require.Equal(t, "/one is not a valid command. Please see /wrangler help", resp.Text)
 		})
 
 		t.Run("two args, invalid command", func(t *testing.T) {
 			args := &model.CommandArgs{Command: "one two"}
 			resp, appErr := plugin.ExecuteCommand(context, args)
 			require.Nil(t, appErr)
-			require.Equal(t, resp.Text, getHelp())
+			require.Equal(t, "/one is not a valid command. Please see /wrangler help", resp.Text)
 		})
 
 		t.Run("move command", func(t *testing.T) {
@@ -53,14 +61,14 @@ func TestCommand(t *testing.T) {
 				args := &model.CommandArgs{Command: "wrangler move"}
 				resp, appErr := plugin.ExecuteCommand(context, args)
 				require.Nil(t, appErr)
-				require.Equal(t, resp.Text, getHelp())
+				require.Equal(t, "/wrangler move requires an additional command. Try adding thread. Please see /wrangler help for more info", resp.Text)
 			})
 
 			t.Run("invalid extra args", func(t *testing.T) {
 				args := &model.CommandArgs{Command: "wrangler move invalid"}
 				resp, appErr := plugin.ExecuteCommand(context, args)
 				require.Nil(t, appErr)
-				require.Equal(t, resp.Text, getHelp())
+				require.Equal(t, "/wrangler move requires an additional command. Try adding thread. Please see /wrangler help for more info", resp.Text)
 			})
 		})
 
@@ -69,14 +77,14 @@ func TestCommand(t *testing.T) {
 				args := &model.CommandArgs{Command: "wrangler copy"}
 				resp, appErr := plugin.ExecuteCommand(context, args)
 				require.Nil(t, appErr)
-				require.Equal(t, resp.Text, getHelp())
+				require.Equal(t, "/wrangler copy requires an additional command. Try adding thread. Please see /wrangler help for more info", resp.Text)
 			})
 
 			t.Run("invalid extra args", func(t *testing.T) {
 				args := &model.CommandArgs{Command: "wrangler copy invalid"}
 				resp, appErr := plugin.ExecuteCommand(context, args)
 				require.Nil(t, appErr)
-				require.Equal(t, resp.Text, getHelp())
+				require.Equal(t, "/wrangler copy requires an additional command. Try adding thread. Please see /wrangler help for more info", resp.Text)
 			})
 		})
 
@@ -85,14 +93,14 @@ func TestCommand(t *testing.T) {
 				args := &model.CommandArgs{Command: "wrangler attach"}
 				resp, appErr := plugin.ExecuteCommand(context, args)
 				require.Nil(t, appErr)
-				require.Equal(t, resp.Text, getHelp())
+				require.Equal(t, "/wrangler attach requires an additional command. Try adding message. Please see /wrangler help for more info", resp.Text)
 			})
 
 			t.Run("invalid extra args", func(t *testing.T) {
 				args := &model.CommandArgs{Command: "wrangler attach invalid"}
 				resp, appErr := plugin.ExecuteCommand(context, args)
 				require.Nil(t, appErr)
-				require.Equal(t, resp.Text, getHelp())
+				require.Equal(t, "/wrangler attach requires an additional command. Try adding message. Please see /wrangler help for more info", resp.Text)
 			})
 		})
 
@@ -101,14 +109,14 @@ func TestCommand(t *testing.T) {
 				args := &model.CommandArgs{Command: "wrangler list"}
 				resp, appErr := plugin.ExecuteCommand(context, args)
 				require.Nil(t, appErr)
-				require.Equal(t, resp.Text, getHelp())
+				require.Equal(t, "/wrangler list requires an additional command. Try adding channels or messages. Please see /wrangler help for more info", resp.Text)
 			})
 
 			t.Run("invalid extra args", func(t *testing.T) {
 				args := &model.CommandArgs{Command: "wrangler list invalid"}
 				resp, appErr := plugin.ExecuteCommand(context, args)
 				require.Nil(t, appErr)
-				require.Equal(t, resp.Text, getHelp())
+				require.Equal(t, "/wrangler list requires an additional command. Try adding channels or messages. Please see /wrangler help for more info", resp.Text)
 			})
 		})
 	})
@@ -120,7 +128,7 @@ func TestCommand(t *testing.T) {
 		infoResp, userError, err := plugin.runInfoCommand([]string{}, nil)
 		require.NoError(t, err)
 		assert.False(t, userError)
-		assert.Equal(t, resp, infoResp)
+		assert.Equal(t, infoResp, resp)
 	})
 
 	t.Run("allowed email domain", func(t *testing.T) {
@@ -134,7 +142,7 @@ func TestCommand(t *testing.T) {
 			}
 			resp, appErr := plugin.ExecuteCommand(context, args)
 			require.Nil(t, appErr)
-			assert.Equal(t, resp.Text, "Permission denied. Please talk to your system administrator to get access.")
+			assert.Equal(t, "Permission denied. Please talk to your system administrator to get access.", resp.Text)
 		})
 
 		t.Run("enabled, user in domain", func(t *testing.T) {
@@ -163,7 +171,7 @@ func TestCommand(t *testing.T) {
 			}
 			resp, appErr := plugin.ExecuteCommand(context, args)
 			require.Nil(t, appErr)
-			assert.Equal(t, resp.Text, "Permission denied. Please talk to your system administrator to get access.")
+			assert.Equal(t, "Permission denied. Please talk to your system administrator to get access.", resp.Text)
 		})
 
 		t.Run("multiple domains", func(t *testing.T) {
@@ -180,7 +188,7 @@ func TestCommand(t *testing.T) {
 				infoResp, userError, err := plugin.runInfoCommand([]string{}, nil)
 				require.NoError(t, err)
 				assert.False(t, userError)
-				assert.Equal(t, resp, infoResp)
+				assert.Equal(t, infoResp, resp)
 			})
 
 			t.Run("user in second domain", func(t *testing.T) {
@@ -197,7 +205,7 @@ func TestCommand(t *testing.T) {
 				infoResp, userError, err := plugin.runInfoCommand([]string{}, nil)
 				require.NoError(t, err)
 				assert.False(t, userError)
-				assert.Equal(t, resp, infoResp)
+				assert.Equal(t, infoResp, resp)
 			})
 
 			t.Run("user in neither domain", func(t *testing.T) {
@@ -211,7 +219,7 @@ func TestCommand(t *testing.T) {
 				}
 				resp, appErr := plugin.ExecuteCommand(context, args)
 				require.Nil(t, appErr)
-				assert.Equal(t, resp.Text, "Permission denied. Please talk to your system administrator to get access.")
+				assert.Equal(t, "Permission denied. Please talk to your system administrator to get access.", resp.Text)
 			})
 
 			t.Run("user is a direct email match", func(t *testing.T) {
@@ -228,7 +236,7 @@ func TestCommand(t *testing.T) {
 				infoResp, userError, err := plugin.runInfoCommand([]string{}, nil)
 				require.NoError(t, err)
 				assert.False(t, userError)
-				assert.Equal(t, resp, infoResp)
+				assert.Equal(t, infoResp, resp)
 			})
 		})
 	})
