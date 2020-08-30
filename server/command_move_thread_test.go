@@ -227,6 +227,7 @@ func TestMoveThreadCommand(t *testing.T) {
 		})
 	})
 
+	//special attention her, not 100% sure what the expected oucome is if the show-root.. flag is not explicitly declared 
 	t.Run("move thread successfully", func(t *testing.T) {
 		require.NoError(t, plugin.configuration.IsValid())
 

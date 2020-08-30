@@ -17,12 +17,9 @@ func getCopyThreadMessage() string {
 	return codeBlock(fmt.Sprintf("`Error: missing arguments\n\n%s", copyThreadUsage))
 }
 
-func (p *Plugin) runCopyThreadCommand(args []string, extra *model.CommandArgs) (*model.CommandResponse, bool, error) {
-	if len(args) < 2 {
-		return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, getCopyThreadMessage()), true, nil
-	}
-	postID := args[0]
-	channelID := args[1]
+func (p *Plugin) runCopyThreadCommand(values map[string]string, extra *model.CommandArgs) (*model.CommandResponse, bool, error) {
+	postID := values["messageID"]
+	channelID := values["channelID"]
 
 	postListResponse, appErr := p.API.GetPostThread(postID)
 	if appErr != nil {
