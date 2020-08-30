@@ -71,17 +71,21 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	wranglerParser := p.slashCommand
 
 	//TODO: will add the values as a next step
-	slashCommand, _, err := wranglerParser.Parse(args.Command)
+	slashCommand, values, err := wranglerParser.Parse(args.Command)
 	if err != nil {
 		return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, err.Error()), nil
 	}
 
 	var handler func([]string, *model.CommandArgs) (*model.CommandResponse, bool, error)
 
+	var resp *model.CommandResponse
+	var userError bool //should the user be presented with error
+	var handlerErr error
+
+	//hopefully this switch statement can go away and slashCommand.Exucute() can replace it.
 	switch slashCommand {
 	case "wrangler move thread":
-		handler = p.runMoveThreadCommand
-		stringArgs = stringArgs[3:]
+		resp, userError, handlerErr = p.runMoveThreadCommand(values, args)
 	case "wrangler copy thread":
 		handler = p.runCopyThreadCommand
 		stringArgs = stringArgs[3:]
@@ -103,7 +107,11 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 		return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, getHelp()), nil
 	}
 
-	resp, userError, err := handler(stringArgs, args)
+	resp, userError, err = handler(stringArgs, args)
+
+	if handlerErr != nil {
+		err = handlerErr
+	}
 
 	if err != nil {
 		p.API.LogError(err.Error())

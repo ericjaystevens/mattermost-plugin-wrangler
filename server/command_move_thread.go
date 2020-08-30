@@ -5,7 +5,6 @@ import (
 
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/pkg/errors"
-	"github.com/spf13/pflag"
 )
 
 const (
@@ -19,41 +18,15 @@ const (
 	flagMoveThreadShowMessageSummary = "show-root-message-in-summary"
 )
 
-func getMoveThreadFlagSet() *pflag.FlagSet {
-	flagSet := pflag.NewFlagSet("move thread", pflag.ContinueOnError)
-	flagSet.Bool(flagMoveThreadShowMessageSummary, true, "Show the root message in the post-move summary")
-
-	return flagSet
-}
-
-func parseMoveThreadFlagArgs(args []string) (bool, error) {
-	flagSet := getMoveThreadFlagSet()
-	err := flagSet.Parse(args)
-	if err != nil {
-		return false, errors.Wrap(err, "unable to parse move thread flag args")
-	}
-
-	return flagSet.GetBool(flagMoveThreadShowMessageSummary)
-}
-
 func getMoveThreadUsage() string {
-	return fmt.Sprintf(moveThreadUsage, getMoveThreadFlagSet().FlagUsages())
+	//TODO this should be replace when built in slashparse help is used
+	return fmt.Sprintf(moveThreadUsage, "SLASHPARSE shows thread ussage")
 }
 
-func getMoveThreadMessage() string {
-	return codeBlock(fmt.Sprintf("`Error: missing arguments\n\n%s", getMoveThreadUsage()))
-}
+func (p *Plugin) runMoveThreadCommand(values map[string]string, extra *model.CommandArgs) (*model.CommandResponse, bool, error) {
 
-func (p *Plugin) runMoveThreadCommand(args []string, extra *model.CommandArgs) (*model.CommandResponse, bool, error) {
-	if len(args) < 2 {
-		return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, getMoveThreadMessage()), true, nil
-	}
-	showRootMessageInSummary, err := parseMoveThreadFlagArgs(args)
-	if err != nil {
-		return nil, false, err
-	}
-	postID := args[0]
-	channelID := args[1]
+	postID := values["messageID"]
+	channelID := values["channelID"]
 
 	postListResponse, appErr := p.API.GetPostThread(postID)
 	if appErr != nil {
@@ -140,7 +113,7 @@ func (p *Plugin) runMoveThreadCommand(args []string, extra *model.CommandArgs) (
 		"\n| Team | Channel | Messages |\n| -- | -- | -- |\n| %s | %s | %d |\n\n",
 		targetTeam.DisplayName, targetChannel.DisplayName, wpl.NumPosts(),
 	)
-	if showRootMessageInSummary {
+	if values["show-root-message-in-summary"] == "on" {
 		msg += fmt.Sprintf("Original Thread Root Message:\n%s\n",
 			quoteBlock(cleanAndTrimMessage(
 				wpl.RootPost().Message, 500),

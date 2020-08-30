@@ -97,26 +97,12 @@ func TestMoveThreadCommand(t *testing.T) {
 	var plugin Plugin
 	plugin.SetAPI(api)
 
-	t.Run("no args", func(t *testing.T) {
-		resp, isUserError, err := plugin.runMoveThreadCommand([]string{}, &model.CommandArgs{ChannelId: originalChannel.Id})
-		require.NoError(t, err)
-		assert.True(t, isUserError)
-		assert.Contains(t, resp.Text, "Error: missing arguments")
-	})
-
-	t.Run("one arg", func(t *testing.T) {
-		resp, isUserError, err := plugin.runMoveThreadCommand([]string{"id1"}, &model.CommandArgs{ChannelId: originalChannel.Id})
-		require.NoError(t, err)
-		assert.True(t, isUserError)
-		assert.Contains(t, resp.Text, "Error: missing arguments")
-	})
-
 	t.Run("private channel", func(t *testing.T) {
 		t.Run("disabled", func(t *testing.T) {
 			plugin.setConfiguration(&configuration{MoveThreadFromPrivateChannelEnable: false})
 			require.NoError(t, plugin.configuration.IsValid())
 
-			resp, isUserError, err := plugin.runMoveThreadCommand([]string{"id1", "id2"}, &model.CommandArgs{ChannelId: privateChannel.Id})
+			resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: privateChannel.Id})
 			require.NoError(t, err)
 			assert.False(t, isUserError)
 			assert.Contains(t, resp.Text, "Wrangler is currently configured to not allow moving posts from private channels")
@@ -128,7 +114,7 @@ func TestMoveThreadCommand(t *testing.T) {
 			plugin.setConfiguration(&configuration{MoveThreadFromDirectMessageChannelEnable: false})
 			require.NoError(t, plugin.configuration.IsValid())
 
-			resp, isUserError, err := plugin.runMoveThreadCommand([]string{"id1", "id2"}, &model.CommandArgs{ChannelId: directChannel.Id})
+			resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: directChannel.Id})
 			require.NoError(t, err)
 			assert.False(t, isUserError)
 			assert.Contains(t, resp.Text, "Wrangler is currently configured to not allow moving posts from direct message channels")
@@ -141,7 +127,7 @@ func TestMoveThreadCommand(t *testing.T) {
 			})
 			require.NoError(t, plugin.configuration.IsValid())
 
-			resp, isUserError, err := plugin.runMoveThreadCommand([]string{directChannel.Id, "id2"}, &model.CommandArgs{ChannelId: directChannel.Id})
+			resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": directChannel.Id, "channelID": "id2"}, &model.CommandArgs{ChannelId: directChannel.Id})
 			require.NoError(t, err)
 			assert.True(t, isUserError)
 			assert.Contains(t, resp.Text, "Error: this command must be run from the channel containing the post")
@@ -154,7 +140,7 @@ func TestMoveThreadCommand(t *testing.T) {
 			})
 			require.NoError(t, plugin.configuration.IsValid())
 
-			resp, isUserError, err := plugin.runMoveThreadCommand([]string{directChannel.Id, "id2"}, &model.CommandArgs{ChannelId: directChannel.Id})
+			resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": directChannel.Id, "channelID": "id2"}, &model.CommandArgs{ChannelId: directChannel.Id})
 			require.NoError(t, err)
 			assert.True(t, isUserError)
 			assert.Contains(t, resp.Text, "Error: this command must be run from the channel containing the post")
@@ -166,7 +152,7 @@ func TestMoveThreadCommand(t *testing.T) {
 			plugin.setConfiguration(&configuration{MoveThreadFromGroupMessageChannelEnable: false})
 			require.NoError(t, plugin.configuration.IsValid())
 
-			resp, isUserError, err := plugin.runMoveThreadCommand([]string{"id1", "id2"}, &model.CommandArgs{ChannelId: groupChannel.Id})
+			resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: groupChannel.Id})
 			require.NoError(t, err)
 			assert.False(t, isUserError)
 			assert.Contains(t, resp.Text, "Wrangler is currently configured to not allow moving posts from group message channels")
@@ -179,7 +165,7 @@ func TestMoveThreadCommand(t *testing.T) {
 			})
 			require.NoError(t, plugin.configuration.IsValid())
 
-			resp, isUserError, err := plugin.runMoveThreadCommand([]string{"id1", "id2"}, &model.CommandArgs{ChannelId: groupChannel.Id})
+			resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: groupChannel.Id})
 			require.NoError(t, err)
 			assert.True(t, isUserError)
 			assert.Contains(t, resp.Text, "Error: this command must be run from the channel containing the post")
@@ -192,7 +178,7 @@ func TestMoveThreadCommand(t *testing.T) {
 			})
 			require.NoError(t, plugin.configuration.IsValid())
 
-			resp, isUserError, err := plugin.runMoveThreadCommand([]string{"id1", "id2"}, &model.CommandArgs{ChannelId: groupChannel.Id})
+			resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: groupChannel.Id})
 			require.NoError(t, err)
 			assert.True(t, isUserError)
 			assert.Contains(t, resp.Text, "Error: this command must be run from the channel containing the post")
@@ -204,7 +190,7 @@ func TestMoveThreadCommand(t *testing.T) {
 			plugin.setConfiguration(&configuration{MoveThreadToAnotherTeamEnable: false})
 			require.NoError(t, plugin.configuration.IsValid())
 
-			resp, isUserError, err := plugin.runMoveThreadCommand([]string{"id1", "id2"}, &model.CommandArgs{ChannelId: originalChannel.Id})
+			resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: originalChannel.Id})
 			require.NoError(t, err)
 			assert.False(t, isUserError)
 			assert.Contains(t, resp.Text, "Wrangler is currently configured to not allow moving messages to different teams")
@@ -215,7 +201,7 @@ func TestMoveThreadCommand(t *testing.T) {
 		plugin.setConfiguration(&configuration{MoveThreadToAnotherTeamEnable: true})
 
 		t.Run("not in thread channel", func(t *testing.T) {
-			resp, isUserError, err := plugin.runMoveThreadCommand([]string{"id1", "id2"}, &model.CommandArgs{ChannelId: model.NewId()})
+			resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: model.NewId()})
 			require.NoError(t, err)
 			assert.True(t, isUserError)
 			assert.Contains(t, resp.Text, "Error: this command must be run from the channel containing the post")
@@ -226,14 +212,14 @@ func TestMoveThreadCommand(t *testing.T) {
 
 		t.Run("in thread being moved", func(t *testing.T) {
 			t.Run("parentId matches", func(t *testing.T) {
-				resp, isUserError, err := plugin.runMoveThreadCommand([]string{"id1", "id2"}, &model.CommandArgs{ChannelId: originalChannel.Id, ParentId: rootPostID})
+				resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: originalChannel.Id, ParentId: rootPostID})
 				require.NoError(t, err)
 				assert.True(t, isUserError)
 				assert.Contains(t, resp.Text, "Error: this command cannot be run from inside the thread; please run directly in the channel containing the thread")
 			})
 
 			t.Run("rootId matches", func(t *testing.T) {
-				resp, isUserError, err := plugin.runMoveThreadCommand([]string{"id1", "id2"}, &model.CommandArgs{ChannelId: originalChannel.Id, RootId: rootPostID})
+				resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: originalChannel.Id, RootId: rootPostID})
 				require.NoError(t, err)
 				assert.True(t, isUserError)
 				assert.Contains(t, resp.Text, "Error: this command cannot be run from inside the thread; please run directly in the channel containing the thread")
@@ -244,7 +230,7 @@ func TestMoveThreadCommand(t *testing.T) {
 	t.Run("move thread successfully", func(t *testing.T) {
 		require.NoError(t, plugin.configuration.IsValid())
 
-		resp, isUserError, err := plugin.runMoveThreadCommand([]string{"id1", "id2"}, &model.CommandArgs{ChannelId: originalChannel.Id})
+		resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2", "show-root-message-in-summary": "on"}, &model.CommandArgs{ChannelId: originalChannel.Id})
 		require.NoError(t, err)
 		assert.False(t, isUserError)
 		assert.Contains(t, resp.Text, fmt.Sprintf("A thread has been moved: %s", makePostLink(*config.ServiceSettings.SiteURL, targetTeam.Name, "")))
@@ -258,7 +244,7 @@ func TestMoveThreadCommand(t *testing.T) {
 	t.Run("move thread successfully, but don't show root message", func(t *testing.T) {
 		require.NoError(t, plugin.configuration.IsValid())
 
-		resp, isUserError, err := plugin.runMoveThreadCommand([]string{"id1", "id2", "--show-root-message-in-summary=false"}, &model.CommandArgs{ChannelId: originalChannel.Id})
+		resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: originalChannel.Id})
 		require.NoError(t, err)
 		assert.False(t, isUserError)
 		assert.Contains(t, resp.Text, fmt.Sprintf("A thread has been moved: %s", makePostLink(*config.ServiceSettings.SiteURL, targetTeam.Name, "")))
@@ -272,7 +258,7 @@ func TestMoveThreadCommand(t *testing.T) {
 	t.Run("thread is above configuration move-maximum", func(t *testing.T) {
 		plugin.setConfiguration(&configuration{MoveThreadMaxCount: "1"})
 		require.NoError(t, plugin.configuration.IsValid())
-		resp, isUserError, err := plugin.runMoveThreadCommand([]string{"id1", "id2"}, &model.CommandArgs{ChannelId: model.NewId()})
+		resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: model.NewId()})
 		require.NoError(t, err)
 		assert.True(t, isUserError)
 		assert.Contains(t, resp.Text, "Error: the thread is 3 posts long, but this command is configured to only move threads of up to 1 posts")
