@@ -18,12 +18,10 @@ func getAttachMessageCommand() string {
 	return codeBlock(attachMessageCommand)
 }
 
-func (p *Plugin) runAttachMessageCommand(args []string, extra *model.CommandArgs) (*model.CommandResponse, bool, error) {
-	if len(args) < 2 {
-		return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, getAttachMessageCommand()), true, nil
-	}
-	postToBeAttachedID := args[0]
-	postToAttachToID := args[1]
+func (p *Plugin) runAttachMessageCommand(values map[string]string, extra *model.CommandArgs) (*model.CommandResponse, bool, error) {
+
+	postToBeAttachedID := values["messageID"]
+	postToAttachToID := values["rootMessageID"]
 
 	if postToBeAttachedID == postToAttachToID {
 		return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, "Error: the two provided message IDs should not be the same"), true, nil

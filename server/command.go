@@ -89,8 +89,7 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	case "wrangler copy thread":
 		resp, userError, handlerErr = p.runCopyThreadCommand(values, args)
 	case "wrangler attach message":
-		handler = p.runAttachMessageCommand
-		stringArgs = stringArgs[3:]
+		resp, userError, handlerErr = p.runAttachMessageCommand(values, args)
 	case "wrangler list channels":
 		handler = p.runListChannelsCommand
 		stringArgs = stringArgs[3:]
