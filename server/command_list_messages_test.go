@@ -25,7 +25,8 @@ func TestMessagelListCommand(t *testing.T) {
 	plugin.SetAPI(api)
 
 	t.Run("list messages successfully", func(t *testing.T) {
-		resp, isUserError, err := plugin.runListMessagesCommand([]string{}, &model.CommandArgs{ChannelId: testChannel.Id})
+		//slashparse will use default values if switches are not used.
+		resp, isUserError, err := plugin.runListMessagesCommand(map[string]string{"count": "20", "trim-length": "50"}, &model.CommandArgs{ChannelId: testChannel.Id})
 		require.NoError(t, err)
 		assert.False(t, isUserError)
 		for _, post := range testPostList.ToSlice() {
@@ -35,7 +36,7 @@ func TestMessagelListCommand(t *testing.T) {
 	})
 
 	t.Run("specify valid count", func(t *testing.T) {
-		resp, isUserError, err := plugin.runListMessagesCommand([]string{"--count=50"}, &model.CommandArgs{ChannelId: testChannel.Id})
+		resp, isUserError, err := plugin.runListMessagesCommand(map[string]string{"count": "50", "trim-length": "50"}, &model.CommandArgs{ChannelId: testChannel.Id})
 		require.NoError(t, err)
 		assert.False(t, isUserError)
 		assert.Contains(t, resp.Text, "The last 50 messages in this channel")
@@ -47,21 +48,21 @@ func TestMessagelListCommand(t *testing.T) {
 	})
 
 	t.Run("specify count that is too low", func(t *testing.T) {
-		_, isUserError, err := plugin.runListMessagesCommand([]string{"--count=-1"}, &model.CommandArgs{ChannelId: testChannel.Id})
+		_, isUserError, err := plugin.runListMessagesCommand(map[string]string{"count": "-1", "trim-length": "50"}, &model.CommandArgs{ChannelId: testChannel.Id})
 		require.Error(t, err)
 		assert.True(t, isUserError)
 		assert.Contains(t, err.Error(), "count (-1) must be between 1 and 100")
 	})
 
 	t.Run("specify count that is too high", func(t *testing.T) {
-		_, isUserError, err := plugin.runListMessagesCommand([]string{"--count=120"}, &model.CommandArgs{ChannelId: testChannel.Id})
+		_, isUserError, err := plugin.runListMessagesCommand(map[string]string{"count": "120", "trim-length": "50"}, &model.CommandArgs{ChannelId: testChannel.Id})
 		require.Error(t, err)
 		assert.True(t, isUserError)
 		assert.Contains(t, err.Error(), "count (120) must be between 1 and 100")
 	})
 
 	t.Run("specify valid trim-length", func(t *testing.T) {
-		resp, isUserError, err := plugin.runListMessagesCommand([]string{"--trim-length=60"}, &model.CommandArgs{ChannelId: testChannel.Id})
+		resp, isUserError, err := plugin.runListMessagesCommand(map[string]string{"count": "20", "trim-length": "60"}, &model.CommandArgs{ChannelId: testChannel.Id})
 		require.NoError(t, err)
 		assert.False(t, isUserError)
 		assert.Contains(t, resp.Text, "The last 20 messages in this channel")
@@ -73,14 +74,14 @@ func TestMessagelListCommand(t *testing.T) {
 	})
 
 	t.Run("specify trim-length that is too low", func(t *testing.T) {
-		_, isUserError, err := plugin.runListMessagesCommand([]string{"--trim-length=-1"}, &model.CommandArgs{ChannelId: testChannel.Id})
+		_, isUserError, err := plugin.runListMessagesCommand(map[string]string{"count": "20", "trim-length": "-1"}, &model.CommandArgs{ChannelId: testChannel.Id})
 		require.Error(t, err)
 		assert.True(t, isUserError)
 		assert.Contains(t, err.Error(), "trim-length (-1) must be between 10 and 500")
 	})
 
 	t.Run("specify trim-length that is too high", func(t *testing.T) {
-		_, isUserError, err := plugin.runListMessagesCommand([]string{"--trim-length=600"}, &model.CommandArgs{ChannelId: testChannel.Id})
+		_, isUserError, err := plugin.runListMessagesCommand(map[string]string{"count": "20", "trim-length": "600"}, &model.CommandArgs{ChannelId: testChannel.Id})
 		require.Error(t, err)
 		assert.True(t, isUserError)
 		assert.Contains(t, err.Error(), "trim-length (600) must be between 10 and 500")
@@ -95,7 +96,7 @@ func TestMessagelListCommand(t *testing.T) {
 		var plugin Plugin
 		plugin.SetAPI(api)
 
-		resp, isUserError, err := plugin.runListMessagesCommand([]string{}, &model.CommandArgs{ChannelId: testChannel.Id})
+		resp, isUserError, err := plugin.runListMessagesCommand(map[string]string{"count": "20", "trim-length": "50"}, &model.CommandArgs{ChannelId: testChannel.Id})
 		require.NoError(t, err)
 		assert.False(t, isUserError)
 		assert.Contains(t, resp.Text, "[     system message     ] - <skipped>")
@@ -159,7 +160,7 @@ func TestTrimMessage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.want, trimMessage(tt.message, 50))
+			require.Equal(t, trimMessage(tt.message, 50), tt.want)
 		})
 	}
 }

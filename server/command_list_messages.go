@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/mattermost/mattermost-server/v5/model"
-	"github.com/spf13/pflag"
 )
 
 const (
@@ -23,59 +23,56 @@ type listMessagesOptions struct {
 	trimLength int
 }
 
-func getListMessagesFlagSet() *pflag.FlagSet {
-	listMessagesFlagSet := pflag.NewFlagSet("list messages", pflag.ContinueOnError)
-	listMessagesFlagSet.Int(flagListMessagesCount, 20, fmt.Sprintf("Number of messages to return. Must be between %d and %d", minListMessagesCount, maxListMessagesCount))
-	listMessagesFlagSet.Int(flagListMessagesTrimLength, 50, fmt.Sprintf("The max character count of messages listed before they are trimmed. Must be between %d and %d", minListMessagesTrimLength, maxListMessagesTrimLength))
+// TODO: These validators should be handled by slashparse
+func validateCount(value string) (count int, err error) {
+	count, err = strconv.Atoi(value)
+	if err != nil {
+		return
+	}
 
-	return listMessagesFlagSet
+	if (count < minListMessagesCount) || (count > maxListMessagesCount) {
+		err = fmt.Errorf("count (%d) must be between %d and %d", count, minListMessagesCount, maxListMessagesCount)
+	}
+
+	return
 }
 
-func parseListMessagesArgs(args []string) (listMessagesOptions, error) {
-	var options listMessagesOptions
-
-	listMessagesFlagSet := getListMessagesFlagSet()
-	err := listMessagesFlagSet.Parse(args)
+func validateLength(value string) (length int, err error) {
+	length, err = strconv.Atoi(value)
 	if err != nil {
-		return options, err
+		return
 	}
 
-	options.count, err = listMessagesFlagSet.GetInt(flagListMessagesCount)
-	if err != nil {
-		return options, err
-	}
-	if options.count < minListMessagesCount || options.count > maxListMessagesCount {
-		return options, fmt.Errorf("%s (%d) must be between %d and %d", flagListMessagesCount, options.count, minListMessagesCount, maxListMessagesCount)
+	if (length < minListMessagesTrimLength) || (length > maxListMessagesTrimLength) {
+		err = fmt.Errorf("%s (%d) must be between %d and %d", flagListMessagesTrimLength, length, minListMessagesTrimLength, maxListMessagesTrimLength)
 	}
 
-	options.trimLength, err = listMessagesFlagSet.GetInt(flagListMessagesTrimLength)
-	if err != nil {
-		return options, err
-	}
-	if options.trimLength < minListMessagesTrimLength || options.trimLength > maxListMessagesTrimLength {
-		return options, fmt.Errorf("%s (%d) must be between %d and %d", flagListMessagesTrimLength, options.trimLength, minListMessagesTrimLength, maxListMessagesTrimLength)
-	}
-
-	return options, nil
+	return
 }
 
-func (p *Plugin) runListMessagesCommand(args []string, extra *model.CommandArgs) (*model.CommandResponse, bool, error) {
-	options, err := parseListMessagesArgs(args)
+func (p *Plugin) runListMessagesCommand(values map[string]string, extra *model.CommandArgs) (*model.CommandResponse, bool, error) {
+
+	count, err := validateCount(values["count"])
 	if err != nil {
 		return nil, true, err
 	}
 
-	channelPosts, appErr := p.API.GetPostsForChannel(extra.ChannelId, 0, options.count)
+	length, err := validateLength(values["trim-length"])
+	if err != nil {
+		return nil, true, err
+	}
+
+	channelPosts, appErr := p.API.GetPostsForChannel(extra.ChannelId, 0, count)
 	if appErr != nil {
 		return nil, false, appErr
 	}
 
-	msg := fmt.Sprintf("The last %d messages in this channel:\n", options.count)
+	msg := fmt.Sprintf("The last %d messages in this channel:\n", count)
 	for _, post := range channelPosts.ToSlice() {
 		if post.IsSystemMessage() {
 			msg += "[     system message     ] - <skipped>\n"
 		} else {
-			msg += fmt.Sprintf("%s - %s\n", post.Id, cleanAndTrimMessage(post.Message, options.trimLength))
+			msg += fmt.Sprintf("%s - %s\n", post.Id, cleanAndTrimMessage(post.Message, length))
 		}
 	}
 

@@ -25,7 +25,6 @@ const helpText = `Wrangler Plugin - Slash Command Help
 /wrangler list messages [flags]
   List the IDs of recent messages in this channel
     Flags:
-%s
 /wrangler info
   Shows plugin information`
 
@@ -35,7 +34,6 @@ func getHelp() string {
 		getMoveThreadUsage(),
 		copyThreadUsage,
 		getListChannelsFlagSet().FlagUsages(),
-		getListMessagesFlagSet().FlagUsages(),
 	))
 }
 
@@ -93,8 +91,7 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	case "wrangler list channels":
 		resp, userError, handlerErr = p.runListChannelsCommand(values, args)
 	case "wrangler list messages":
-		handler = p.runListMessagesCommand
-		stringArgs = stringArgs[3:]
+		resp, userError, handlerErr = p.runListMessagesCommand(values, args)
 	case "wrangler info":
 		handler = p.runInfoCommand
 		stringArgs = stringArgs[2:]
