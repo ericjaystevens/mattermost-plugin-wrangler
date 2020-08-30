@@ -48,11 +48,7 @@ func parseListChannelsArgs(args []string) (listChannelsOptions, error) {
 	return options, nil
 }
 
-func (p *Plugin) runListChannelsCommand(args []string, extra *model.CommandArgs) (*model.CommandResponse, bool, error) {
-	options, err := parseListChannelsArgs(args)
-	if err != nil {
-		return nil, true, err
-	}
+func (p *Plugin) runListChannelsCommand(values map[string]string, extra *model.CommandArgs) (*model.CommandResponse, bool, error) {
 
 	teams, appErr := p.API.GetTeamsForUser(extra.UserId)
 	if appErr != nil {
@@ -61,7 +57,7 @@ func (p *Plugin) runListChannelsCommand(args []string, extra *model.CommandArgs)
 
 	var msg string
 	for _, team := range teams {
-		if len(options.teamFilter) != 0 && !strings.Contains(team.Name, options.teamFilter) {
+		if len(values["team-filter"]) != 0 && !strings.Contains(team.Name, values["team-filter"]) {
 			continue
 		}
 
@@ -75,7 +71,7 @@ func (p *Plugin) runListChannelsCommand(args []string, extra *model.CommandArgs)
 			if channel.IsGroupOrDirect() {
 				continue
 			}
-			if len(options.channelFilter) != 0 && !strings.Contains(channel.Name, options.channelFilter) {
+			if len(values["channel-filter"]) != 0 && !strings.Contains(channel.Name, values["channel-filter"]) {
 				continue
 			}
 			filteredChannels = append(filteredChannels, channel)

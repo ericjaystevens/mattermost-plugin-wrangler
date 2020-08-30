@@ -91,8 +91,7 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	case "wrangler attach message":
 		resp, userError, handlerErr = p.runAttachMessageCommand(values, args)
 	case "wrangler list channels":
-		handler = p.runListChannelsCommand
-		stringArgs = stringArgs[3:]
+		resp, userError, handlerErr = p.runListChannelsCommand(values, args)
 	case "wrangler list messages":
 		handler = p.runListMessagesCommand
 		stringArgs = stringArgs[3:]

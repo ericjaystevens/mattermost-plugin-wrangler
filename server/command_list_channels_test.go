@@ -22,7 +22,7 @@ func TestChannelListCommand(t *testing.T) {
 	t.Run("flags", func(t *testing.T) {
 		t.Run("team-filter", func(t *testing.T) {
 			t.Run("with results", func(t *testing.T) {
-				resp, isUserError, err := plugin.runListChannelsCommand([]string{"--team-filter=team"}, &model.CommandArgs{})
+				resp, isUserError, err := plugin.runListChannelsCommand(map[string]string{"team-filter": "team"}, &model.CommandArgs{})
 				require.NoError(t, err)
 				assert.False(t, isUserError)
 				assert.Contains(t, resp.Text, "team-0")
@@ -34,7 +34,7 @@ func TestChannelListCommand(t *testing.T) {
 			})
 
 			t.Run("no results", func(t *testing.T) {
-				resp, isUserError, err := plugin.runListChannelsCommand([]string{"--team-filter=thisteamdoesnotexist"}, &model.CommandArgs{})
+				resp, isUserError, err := plugin.runListChannelsCommand(map[string]string{"team-filter": "thisteamdoesnotexist"}, &model.CommandArgs{})
 				require.NoError(t, err)
 				assert.False(t, isUserError)
 				assert.Contains(t, resp.Text, "No results found")
@@ -43,7 +43,7 @@ func TestChannelListCommand(t *testing.T) {
 
 		t.Run("channel-filter", func(t *testing.T) {
 			t.Run("with results", func(t *testing.T) {
-				resp, isUserError, err := plugin.runListChannelsCommand([]string{"--channel-filter=channel"}, &model.CommandArgs{})
+				resp, isUserError, err := plugin.runListChannelsCommand(map[string]string{"channel-filter": "channel"}, &model.CommandArgs{})
 				require.NoError(t, err)
 				assert.False(t, isUserError)
 				assert.Contains(t, resp.Text, "team-0")
@@ -55,7 +55,7 @@ func TestChannelListCommand(t *testing.T) {
 			})
 
 			t.Run("no results", func(t *testing.T) {
-				resp, isUserError, err := plugin.runListChannelsCommand([]string{"--channel-filter=thischanneldoesnotexist"}, &model.CommandArgs{})
+				resp, isUserError, err := plugin.runListChannelsCommand(map[string]string{"channel-filter": "thischanneldoesnotexist"}, &model.CommandArgs{})
 				require.NoError(t, err)
 				assert.False(t, isUserError)
 				assert.Contains(t, resp.Text, "No results found")
@@ -64,7 +64,7 @@ func TestChannelListCommand(t *testing.T) {
 
 		t.Run("team-filter and channel-filter", func(t *testing.T) {
 			t.Run("with results", func(t *testing.T) {
-				resp, isUserError, err := plugin.runListChannelsCommand([]string{" --team-filter=team --channel-filter=channel"}, &model.CommandArgs{})
+				resp, isUserError, err := plugin.runListChannelsCommand(map[string]string{"team-filter": "team", "channel-filter": "channel"}, &model.CommandArgs{})
 				require.NoError(t, err)
 				assert.False(t, isUserError)
 				assert.Contains(t, resp.Text, "team-0")
@@ -76,7 +76,7 @@ func TestChannelListCommand(t *testing.T) {
 			})
 
 			t.Run("no results", func(t *testing.T) {
-				resp, isUserError, err := plugin.runListChannelsCommand([]string{"--team-filter=thisteamdoesnotexist --channel-filter=thischanneldoesnotexist"}, &model.CommandArgs{})
+				resp, isUserError, err := plugin.runListChannelsCommand(map[string]string{"team-filter": "thisteamdoesnotexist", "channel-filter": "thischanneldoesnotexist"}, &model.CommandArgs{})
 				require.NoError(t, err)
 				assert.False(t, isUserError)
 				assert.Contains(t, resp.Text, "No results found")
@@ -85,7 +85,7 @@ func TestChannelListCommand(t *testing.T) {
 	})
 
 	t.Run("list channels successfully", func(t *testing.T) {
-		resp, isUserError, err := plugin.runListChannelsCommand([]string{}, &model.CommandArgs{})
+		resp, isUserError, err := plugin.runListChannelsCommand(map[string]string{}, &model.CommandArgs{})
 		require.NoError(t, err)
 		assert.False(t, isUserError)
 		assert.Contains(t, resp.Text, "team-0")
