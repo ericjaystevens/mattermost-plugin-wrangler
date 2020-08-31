@@ -100,8 +100,8 @@ func TestCopyThreadCommand(t *testing.T) {
 
 			resp, isUserError, err := plugin.runCopyThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: privateChannel.Id})
 			require.NoError(t, err)
-			assert.False(t, isUserError)
-			assert.Contains(t, "Wrangler is currently configured to not allow moving posts from private channels", resp.Text)
+			assert.NoError(t, isUserError)
+			assert.Contains(t, "Wrangler is currently configured to not allow moving posts from private channels", resp)
 		})
 	})
 
@@ -112,8 +112,8 @@ func TestCopyThreadCommand(t *testing.T) {
 
 			resp, isUserError, err := plugin.runCopyThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: directChannel.Id})
 			require.NoError(t, err)
-			assert.False(t, isUserError)
-			assert.Contains(t, "Wrangler is currently configured to not allow moving posts from direct message channels", resp.Text)
+			assert.NoError(t, isUserError)
+			assert.Contains(t, "Wrangler is currently configured to not allow moving posts from direct message channels", resp)
 		})
 	})
 
@@ -124,8 +124,8 @@ func TestCopyThreadCommand(t *testing.T) {
 
 			resp, isUserError, err := plugin.runCopyThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: groupChannel.Id})
 			require.NoError(t, err)
-			assert.False(t, isUserError)
-			assert.Contains(t, "Wrangler is currently configured to not allow moving posts from group message channels", resp.Text)
+			assert.NoError(t, isUserError)
+			assert.Contains(t, "Wrangler is currently configured to not allow moving posts from group message channels", resp)
 		})
 	})
 
@@ -136,8 +136,8 @@ func TestCopyThreadCommand(t *testing.T) {
 
 			resp, isUserError, err := plugin.runCopyThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: originalChannel.Id})
 			require.NoError(t, err)
-			assert.False(t, isUserError)
-			assert.Contains(t, "Wrangler is currently configured to not allow moving messages to different teams", resp.Text)
+			assert.NoError(t, isUserError)
+			assert.Contains(t, "Wrangler is currently configured to not allow moving messages to different teams", resp)
 		})
 	})
 
@@ -147,8 +147,8 @@ func TestCopyThreadCommand(t *testing.T) {
 		t.Run("not in thread channel", func(t *testing.T) {
 			resp, isUserError, err := plugin.runCopyThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: model.NewId()})
 			require.NoError(t, err)
-			assert.True(t, isUserError)
-			assert.Contains(t, "Error: this command must be run from the channel containing the post", resp.Text)
+			assert.NoError(t, isUserError)
+			assert.Contains(t, "Error: this command must be run from the channel containing the post", resp)
 		})
 
 		postSlice := generatedPosts.ToSlice()
@@ -158,15 +158,15 @@ func TestCopyThreadCommand(t *testing.T) {
 			t.Run("parentId matches", func(t *testing.T) {
 				resp, isUserError, err := plugin.runCopyThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: originalChannel.Id, ParentId: rootPostID})
 				require.NoError(t, err)
-				assert.True(t, isUserError)
-				assert.Contains(t, "Error: this command cannot be run from inside the thread; please run directly in the channel containing the thread", resp.Text)
+				assert.NoError(t, isUserError)
+				assert.Contains(t, "Error: this command cannot be run from inside the thread; please run directly in the channel containing the thread", resp)
 			})
 
 			t.Run("rootId matches", func(t *testing.T) {
 				resp, isUserError, err := plugin.runCopyThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: originalChannel.Id, RootId: rootPostID})
 				require.NoError(t, err)
-				assert.True(t, isUserError)
-				assert.Contains(t, "Error: this command cannot be run from inside the thread; please run directly in the channel containing the thread", resp.Text)
+				assert.NoError(t, isUserError)
+				assert.Contains(t, "Error: this command cannot be run from inside the thread; please run directly in the channel containing the thread", resp)
 			})
 		})
 	})
@@ -176,8 +176,8 @@ func TestCopyThreadCommand(t *testing.T) {
 
 		resp, isUserError, err := plugin.runCopyThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: originalChannel.Id})
 		require.NoError(t, err)
-		assert.False(t, isUserError)
-		assert.Contains(t, "Thread copy complete", resp.Text)
+		assert.NoError(t, isUserError)
+		assert.Contains(t, "Thread copy complete", resp)
 	})
 
 	t.Run("thread is above configuration move-maximum", func(t *testing.T) {
@@ -185,7 +185,7 @@ func TestCopyThreadCommand(t *testing.T) {
 		require.NoError(t, plugin.configuration.IsValid())
 		resp, isUserError, err := plugin.runCopyThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: model.NewId()})
 		require.NoError(t, err)
-		assert.True(t, isUserError)
-		assert.Contains(t, "Error: the thread is 3 posts long, but this command is configured to only move threads of up to 1 posts", resp.Text)
+		assert.NoError(t, isUserError)
+		assert.Contains(t, "Error: the thread is 3 posts long, but this command is configured to only move threads of up to 1 posts", resp)
 	})
 }

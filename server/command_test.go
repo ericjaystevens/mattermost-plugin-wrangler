@@ -39,7 +39,7 @@ func TestCommand(t *testing.T) {
 			args := &model.CommandArgs{}
 			resp, appErr := plugin.ExecuteCommand(context, args)
 			require.Nil(t, appErr)
-			require.Equal(t, resp.Text, getHelp())
+			require.Equal(t, getHelp(), resp.Text)
 		})
 
 		t.Run("one arg", func(t *testing.T) {
