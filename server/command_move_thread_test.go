@@ -104,8 +104,8 @@ func TestMoveThreadCommand(t *testing.T) {
 
 			resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: privateChannel.Id})
 			require.NoError(t, err)
-			assert.False(t, isUserError)
-			assert.Contains(t, resp.Text, "Wrangler is currently configured to not allow moving posts from private channels")
+			assert.NoError(t, isUserError)
+			assert.Contains(t, resp, "Wrangler is currently configured to not allow moving posts from private channels")
 		})
 	})
 
@@ -116,8 +116,8 @@ func TestMoveThreadCommand(t *testing.T) {
 
 			resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: directChannel.Id})
 			require.NoError(t, err)
-			assert.False(t, isUserError)
-			assert.Contains(t, resp.Text, "Wrangler is currently configured to not allow moving posts from direct message channels")
+			assert.NoError(t, isUserError)
+			assert.Contains(t, resp, "Wrangler is currently configured to not allow moving posts from direct message channels")
 		})
 
 		t.Run("enabled, move to another team disabled", func(t *testing.T) {
@@ -129,8 +129,8 @@ func TestMoveThreadCommand(t *testing.T) {
 
 			resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": directChannel.Id, "channelID": "id2"}, &model.CommandArgs{ChannelId: directChannel.Id})
 			require.NoError(t, err)
-			assert.True(t, isUserError)
-			assert.Contains(t, resp.Text, "Error: this command must be run from the channel containing the post")
+			assert.NoError(t, isUserError)
+			assert.Contains(t, resp, "Error: this command must be run from the channel containing the post")
 		})
 
 		t.Run("enabled, move to another team enabled", func(t *testing.T) {
@@ -142,8 +142,8 @@ func TestMoveThreadCommand(t *testing.T) {
 
 			resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": directChannel.Id, "channelID": "id2"}, &model.CommandArgs{ChannelId: directChannel.Id})
 			require.NoError(t, err)
-			assert.True(t, isUserError)
-			assert.Contains(t, resp.Text, "Error: this command must be run from the channel containing the post")
+			assert.NoError(t, isUserError)
+			assert.Contains(t, resp, "Error: this command must be run from the channel containing the post")
 		})
 	})
 
@@ -154,8 +154,8 @@ func TestMoveThreadCommand(t *testing.T) {
 
 			resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: groupChannel.Id})
 			require.NoError(t, err)
-			assert.False(t, isUserError)
-			assert.Contains(t, resp.Text, "Wrangler is currently configured to not allow moving posts from group message channels")
+			assert.NoError(t, isUserError)
+			assert.Contains(t, resp, "Wrangler is currently configured to not allow moving posts from group message channels")
 		})
 
 		t.Run("enabled, move to another team disabled", func(t *testing.T) {
@@ -167,8 +167,8 @@ func TestMoveThreadCommand(t *testing.T) {
 
 			resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: groupChannel.Id})
 			require.NoError(t, err)
-			assert.True(t, isUserError)
-			assert.Contains(t, resp.Text, "Error: this command must be run from the channel containing the post")
+			assert.NoError(t, isUserError)
+			assert.Contains(t, resp, "Error: this command must be run from the channel containing the post")
 		})
 
 		t.Run("enabled, move to another team enabled", func(t *testing.T) {
@@ -180,8 +180,8 @@ func TestMoveThreadCommand(t *testing.T) {
 
 			resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: groupChannel.Id})
 			require.NoError(t, err)
-			assert.True(t, isUserError)
-			assert.Contains(t, resp.Text, "Error: this command must be run from the channel containing the post")
+			assert.NoError(t, isUserError)
+			assert.Contains(t, resp, "Error: this command must be run from the channel containing the post")
 		})
 	})
 
@@ -192,8 +192,8 @@ func TestMoveThreadCommand(t *testing.T) {
 
 			resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: originalChannel.Id})
 			require.NoError(t, err)
-			assert.False(t, isUserError)
-			assert.Contains(t, resp.Text, "Wrangler is currently configured to not allow moving messages to different teams")
+			assert.NoError(t, isUserError)
+			assert.Contains(t, resp, "Wrangler is currently configured to not allow moving messages to different teams")
 		})
 	})
 
@@ -203,8 +203,8 @@ func TestMoveThreadCommand(t *testing.T) {
 		t.Run("not in thread channel", func(t *testing.T) {
 			resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: model.NewId()})
 			require.NoError(t, err)
-			assert.True(t, isUserError)
-			assert.Contains(t, resp.Text, "Error: this command must be run from the channel containing the post")
+			assert.NoError(t, isUserError)
+			assert.Contains(t, resp, "Error: this command must be run from the channel containing the post")
 		})
 
 		postSlice := generatedPosts.ToSlice()
@@ -214,32 +214,32 @@ func TestMoveThreadCommand(t *testing.T) {
 			t.Run("parentId matches", func(t *testing.T) {
 				resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: originalChannel.Id, ParentId: rootPostID})
 				require.NoError(t, err)
-				assert.True(t, isUserError)
-				assert.Contains(t, resp.Text, "Error: this command cannot be run from inside the thread; please run directly in the channel containing the thread")
+				assert.NoError(t, isUserError)
+				assert.Contains(t, resp, "Error: this command cannot be run from inside the thread; please run directly in the channel containing the thread")
 			})
 
 			t.Run("rootId matches", func(t *testing.T) {
 				resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: originalChannel.Id, RootId: rootPostID})
 				require.NoError(t, err)
-				assert.True(t, isUserError)
-				assert.Contains(t, resp.Text, "Error: this command cannot be run from inside the thread; please run directly in the channel containing the thread")
+				assert.NoError(t, isUserError)
+				assert.Contains(t, resp, "Error: this command cannot be run from inside the thread; please run directly in the channel containing the thread")
 			})
 		})
 	})
 
-	//special attention her, not 100% sure what the expected oucome is if the show-root.. flag is not explicitly declared 
+	//special attention her, not 100% sure what the expected oucome is if the show-root.. flag is not explicitly declared
 	t.Run("move thread successfully", func(t *testing.T) {
 		require.NoError(t, plugin.configuration.IsValid())
 
 		resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2", "show-root-message-in-summary": "on"}, &model.CommandArgs{ChannelId: originalChannel.Id})
 		require.NoError(t, err)
-		assert.False(t, isUserError)
-		assert.Contains(t, resp.Text, fmt.Sprintf("A thread has been moved: %s", makePostLink(*config.ServiceSettings.SiteURL, targetTeam.Name, "")))
-		assert.Contains(t, resp.Text, fmt.Sprintf(
+		assert.NoError(t, isUserError)
+		assert.Contains(t, resp, fmt.Sprintf("A thread has been moved: %s", makePostLink(*config.ServiceSettings.SiteURL, targetTeam.Name, "")))
+		assert.Contains(t, resp, fmt.Sprintf(
 			"\n| Team | Channel | Messages |\n| -- | -- | -- |\n| %s | %s | %d |\n\n",
 			targetTeam.DisplayName, targetChannel.DisplayName, 3,
 		))
-		assert.Contains(t, resp.Text, quoteBlock("This is message 1"))
+		assert.Contains(t, resp, quoteBlock("This is message 1"))
 	})
 
 	t.Run("move thread successfully, but don't show root message", func(t *testing.T) {
@@ -247,13 +247,13 @@ func TestMoveThreadCommand(t *testing.T) {
 
 		resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: originalChannel.Id})
 		require.NoError(t, err)
-		assert.False(t, isUserError)
-		assert.Contains(t, resp.Text, fmt.Sprintf("A thread has been moved: %s", makePostLink(*config.ServiceSettings.SiteURL, targetTeam.Name, "")))
-		assert.Contains(t, resp.Text, fmt.Sprintf(
+		assert.NoError(t, isUserError)
+		assert.Contains(t, resp, fmt.Sprintf("A thread has been moved: %s", makePostLink(*config.ServiceSettings.SiteURL, targetTeam.Name, "")))
+		assert.Contains(t, resp, fmt.Sprintf(
 			"\n| Team | Channel | Messages |\n| -- | -- | -- |\n| %s | %s | %d |\n\n",
 			targetTeam.DisplayName, targetChannel.DisplayName, 3,
 		))
-		assert.NotContains(t, resp.Text, "This is message 1")
+		assert.NotContains(t, resp, "This is message 1")
 	})
 
 	t.Run("thread is above configuration move-maximum", func(t *testing.T) {
@@ -261,8 +261,8 @@ func TestMoveThreadCommand(t *testing.T) {
 		require.NoError(t, plugin.configuration.IsValid())
 		resp, isUserError, err := plugin.runMoveThreadCommand(map[string]string{"messageID": "id1", "channelID": "id2"}, &model.CommandArgs{ChannelId: model.NewId()})
 		require.NoError(t, err)
-		assert.True(t, isUserError)
-		assert.Contains(t, resp.Text, "Error: the thread is 3 posts long, but this command is configured to only move threads of up to 1 posts")
+		assert.NoError(t, isUserError)
+		assert.Contains(t, resp, "Error: the thread is 3 posts long, but this command is configured to only move threads of up to 1 posts")
 	})
 }
 

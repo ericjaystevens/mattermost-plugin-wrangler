@@ -3,7 +3,7 @@ module github.com/gabrieljackson/mattermost-plugin-wrangler
 go 1.14
 
 require (
-	github.com/ericjaystevens/slashparse v0.0.1-alpha.1.0.20200829184511-098a6779b2e1
+	github.com/ericjaystevens/slashparse v0.0.1-alpha.1.0.20200830202141-a94b4d3f272b
 	github.com/mattermost/mattermost-server/v5 v5.24.1
 	github.com/mholt/archiver/v3 v3.3.0
 	github.com/pkg/errors v0.9.1

@@ -71,5 +71,6 @@ func (p *Plugin) OnActivate() error {
 		return err
 	}
 
+	p.slashCommand.SetHandler("wrangler move thread", p.runMoveThreadCommand)
 	return p.API.RegisterCommand(getCommand(config.CommandAutoCompleteEnable))
 }

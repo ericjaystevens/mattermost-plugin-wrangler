@@ -79,11 +79,13 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	var resp *model.CommandResponse
 	var userError bool //should the user be presented with error
 	var handlerErr error
+	var msg string
+	//var friendlyErr error
 
 	//hopefully this switch statement can go away and slashCommand.Execute() can replace it.
 	switch slashCommand {
 	case "wrangler move thread":
-		resp, userError, handlerErr = p.runMoveThreadCommand(values, args)
+		msg, _, handlerErr = p.slashCommand.Execute(args.Command, args)
 	case "wrangler copy thread":
 		resp, userError, handlerErr = p.runCopyThreadCommand(values, args)
 	case "wrangler attach message":
@@ -95,6 +97,10 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	case "wrangler info":
 		handler = p.runInfoCommand
 		stringArgs = stringArgs[2:]
+	}
+
+	if msg != "" {
+		resp = model.CommandResponseFromPlainText(msg)
 	}
 
 	if handler == nil {

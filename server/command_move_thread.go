@@ -23,38 +23,39 @@ func getMoveThreadUsage() string {
 	return fmt.Sprintf(moveThreadUsage, "SLASHPARSE shows thread ussage")
 }
 
-func (p *Plugin) runMoveThreadCommand(values map[string]string, extra *model.CommandArgs) (*model.CommandResponse, bool, error) {
+func (p *Plugin) runMoveThreadCommand(values map[string]string, item interface{}) (string, error, error) {
 
 	postID := values["messageID"]
 	channelID := values["channelID"]
+	extra := item.(*model.CommandArgs)
 
 	postListResponse, appErr := p.API.GetPostThread(postID)
 	if appErr != nil {
-		return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, fmt.Sprintf("Error: unable to get post with ID %s; ensure this is correct", postID)), true, nil
+		return fmt.Sprintf("Error: unable to get post with ID %s; ensure this is correct", postID), nil, nil
 	}
 	wpl := buildWranglerPostList(postListResponse)
 
 	originalChannel, appErr := p.API.GetChannel(extra.ChannelId)
 	if appErr != nil {
-		return nil, false, fmt.Errorf("unable to get channel with ID %s", extra.ChannelId)
+		return "", fmt.Errorf("unable to get channel with ID %s", extra.ChannelId), fmt.Errorf("unable to get channel with ID %s", extra.ChannelId)
 	}
 	_, appErr = p.API.GetChannelMember(channelID, extra.UserId)
 	if appErr != nil {
-		return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, fmt.Sprintf("Error: channel with ID %s doesn't exist or you are not a member", channelID)), true, nil
+		return fmt.Sprintf("Error: channel with ID %s doesn't exist or you are not a member", channelID), nil, nil
 	}
 	targetChannel, appErr := p.API.GetChannel(channelID)
 	if appErr != nil {
-		return nil, false, fmt.Errorf("unable to get channel with ID %s", channelID)
+		return "", fmt.Errorf("unable to get channel with ID %s", channelID), fmt.Errorf("unable to get channel with ID %s", channelID)
 	}
 
-	response, userErr, err := p.validateMoveOrCopy(wpl, originalChannel, targetChannel, extra)
+	response, _, err := p.validateMoveOrCopy(wpl, originalChannel, targetChannel, extra)
 	if response != nil || err != nil {
-		return response, userErr, err
+		return response.Text, err, err
 	}
 
 	targetTeam, appErr := p.API.GetTeam(targetChannel.TeamId)
 	if appErr != nil {
-		return nil, false, fmt.Errorf("unable to get team with ID %s", targetChannel.TeamId)
+		return "", fmt.Errorf("unable to get team with ID %s", targetChannel.TeamId), fmt.Errorf("unable to get team with ID %s", targetChannel.TeamId)
 	}
 
 	// Begin creating the new thread.
@@ -68,7 +69,7 @@ func (p *Plugin) runMoveThreadCommand(values map[string]string, extra *model.Com
 	// new channel and later delete the original messages(s).
 	newRootPost, err := p.copyWranglerPostlist(wpl, targetChannel)
 	if err != nil {
-		return nil, false, err
+		return "", err, err
 	}
 
 	_, appErr = p.API.CreatePost(&model.Post{
@@ -79,14 +80,14 @@ func (p *Plugin) runMoveThreadCommand(values map[string]string, extra *model.Com
 		Message:   "This thread was moved from another channel",
 	})
 	if appErr != nil {
-		return nil, false, errors.Wrap(appErr, "unable to create new bot post")
+		return "", errors.Wrap(appErr, "unable to create new bot post"), errors.Wrap(appErr, "unable to create new bot post")
 	}
 
 	// Cleanup is handled by simply deleting the root post. Any comments/replies
 	// are automatically marked as deleted for us.
 	appErr = p.API.DeletePost(wpl.RootPost().Id)
 	if appErr != nil {
-		return nil, false, errors.Wrap(appErr, "unable to delete post")
+		return "", errors.Wrap(appErr, "unable to delete post"), errors.Wrap(appErr, "unable to delete post")
 	}
 
 	p.API.LogInfo("Wrangler thread move complete",
@@ -121,7 +122,7 @@ func (p *Plugin) runMoveThreadCommand(values map[string]string, extra *model.Com
 		)
 	}
 
-	return getCommandResponse(model.COMMAND_RESPONSE_TYPE_IN_CHANNEL, msg), false, nil
+	return msg, nil, nil
 }
 
 func (p *Plugin) postMoveThreadBotDM(userID, newPostLink string) error {
