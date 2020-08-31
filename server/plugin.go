@@ -11,7 +11,7 @@ import (
 	"github.com/mattermost/mattermost-server/v5/plugin"
 )
 
-const configPath = "wrangler.yaml"
+const configPath = "/home/ec2-user/code/mattermost-plugin-wrangler/wrangler.yaml"
 
 // Plugin implements the interface expected by the Mattermost server to communicate between the server and plugin processes.
 type Plugin struct {

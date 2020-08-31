@@ -68,7 +68,6 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 
 	wranglerParser := p.slashCommand
 
-	//TODO: will add the values as a next step
 	slashCommand, values, err := wranglerParser.Parse(args.Command)
 	if err != nil {
 		return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, err.Error()), nil
@@ -103,11 +102,9 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 		resp = model.CommandResponseFromPlainText(msg)
 	}
 
-	if handler == nil {
-		return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, getHelp()), nil
+	if handler != nil {
+		resp, userError, err = handler(stringArgs, args)
 	}
-
-	resp, userError, err = handler(stringArgs, args)
 
 	if handlerErr != nil {
 		err = handlerErr
