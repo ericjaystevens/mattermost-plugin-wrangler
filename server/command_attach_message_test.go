@@ -104,45 +104,45 @@ func TestAttachMessageCommand(t *testing.T) {
 	t.Run("post IDs are the same", func(t *testing.T) {
 		resp, isUserError, err := plugin.runAttachMessageCommand(map[string]string{"messageID": postToAttachTo.Id, "rootMessageID": postToAttachTo.Id}, &model.CommandArgs{ChannelId: model.NewId()})
 		require.NoError(t, err)
-		assert.True(t, isUserError)
-		assert.Contains(t, "Error: the two provided message IDs should not be the same", resp.Text)
+		assert.NoError(t, isUserError)
+		assert.Contains(t, "Error: the two provided message IDs should not be the same", resp)
 	})
 
 	t.Run("post to be attached invalid", func(t *testing.T) {
 		resp, isUserError, err := plugin.runAttachMessageCommand(map[string]string{"messageID": model.NewId(), "rootMessageID": postToAttachTo.Id}, &model.CommandArgs{ChannelId: model.NewId()})
 		require.NoError(t, err)
-		assert.True(t, isUserError)
-		assert.Contains(t, resp.Text, "Error: unable to get message with ID")
+		assert.NoError(t, isUserError)
+		assert.Contains(t, resp, "Error: unable to get message with ID")
 	})
 
 	t.Run("post to be attached to invalid", func(t *testing.T) {
 		resp, isUserError, err := plugin.runAttachMessageCommand(map[string]string{"messageID": postToBeAttached.Id, "rootMessageID": model.NewId()}, &model.CommandArgs{ChannelId: model.NewId()})
 		require.NoError(t, err)
-		assert.True(t, isUserError)
-		assert.Contains(t, resp.Text, "Error: unable to get message with ID")
+		assert.NoError(t, isUserError)
+		assert.Contains(t, resp, "Error: unable to get message with ID")
 	})
 
 	t.Run("invalid command run location", func(t *testing.T) {
 		t.Run("not in channel with messages", func(t *testing.T) {
 			resp, isUserError, err := plugin.runAttachMessageCommand(map[string]string{"messageID": postToBeAttached.Id, "rootMessageID": postToAttachTo.Id}, &model.CommandArgs{ChannelId: model.NewId()})
 			require.NoError(t, err)
-			assert.True(t, isUserError)
-			assert.Contains(t, resp.Text, "Error: the attach command must be run from the channel containing the messages")
+			assert.NoError(t, isUserError)
+			assert.Contains(t, resp, "Error: the attach command must be run from the channel containing the messages")
 		})
 
 		t.Run("in thread with message to be attached", func(t *testing.T) {
 			t.Run("parentId matches", func(t *testing.T) {
 				resp, isUserError, err := plugin.runAttachMessageCommand(map[string]string{"messageID": postToBeAttached.Id, "rootMessageID": postToAttachTo.Id}, &model.CommandArgs{ChannelId: channel1.Id, ParentId: postToBeAttached.Id})
 				require.NoError(t, err)
-				assert.True(t, isUserError)
-				assert.Contains(t, "Error: the 'attach message' command cannot be run from inside the thread of the message being attached; please run directly in the channel containing the message you wish to attach", resp.Text)
+				assert.NoError(t, isUserError)
+				assert.Contains(t, "Error: the 'attach message' command cannot be run from inside the thread of the message being attached; please run directly in the channel containing the message you wish to attach", resp)
 			})
 
 			t.Run("rootId matches", func(t *testing.T) {
 				resp, isUserError, err := plugin.runAttachMessageCommand(map[string]string{"messageID": postToBeAttached.Id, "rootMessageID": postToAttachTo.Id}, &model.CommandArgs{ChannelId: channel1.Id, RootId: postToBeAttached.Id})
 				require.NoError(t, err)
-				assert.True(t, isUserError)
-				assert.Contains(t, "Error: the 'attach message' command cannot be run from inside the thread of the message being attached; please run directly in the channel containing the message you wish to attach", resp.Text)
+				assert.NoError(t, isUserError)
+				assert.Contains(t, "Error: the 'attach message' command cannot be run from inside the thread of the message being attached; please run directly in the channel containing the message you wish to attach", resp)
 			})
 		})
 	})
@@ -150,15 +150,15 @@ func TestAttachMessageCommand(t *testing.T) {
 	t.Run("attach to message in another channel", func(t *testing.T) {
 		resp, isUserError, err := plugin.runAttachMessageCommand(map[string]string{"messageID": postToBeAttached.Id, "rootMessageID": postInAnotherChannel.Id}, &model.CommandArgs{ChannelId: channel1.Id})
 		require.NoError(t, err)
-		assert.True(t, isUserError)
-		assert.Contains(t, "Error: unable to attach message to a thread in another channel", resp.Text)
+		assert.NoError(t, isUserError)
+		assert.Contains(t, "Error: unable to attach message to a thread in another channel", resp)
 	})
 
 	t.Run("attach message already in another thread", func(t *testing.T) {
 		resp, isUserError, err := plugin.runAttachMessageCommand(map[string]string{"messageID": postInThreadAlready.Id, "rootMessageID": postToAttachTo.Id}, &model.CommandArgs{ChannelId: channel1.Id})
 		require.NoError(t, err)
-		assert.True(t, isUserError)
-		assert.Contains(t, "Error: the message to be attached is already part of a thread", resp.Text)
+		assert.NoError(t, isUserError)
+		assert.Contains(t, "Error: the message to be attached is already part of a thread", resp)
 	})
 
 	t.Run("attach message successfully", func(t *testing.T) {
@@ -167,7 +167,7 @@ func TestAttachMessageCommand(t *testing.T) {
 
 		resp, isUserError, err := plugin.runAttachMessageCommand(map[string]string{"messageID": postToBeAttached.Id, "rootMessageID": postToAttachTo.Id}, &model.CommandArgs{ChannelId: channel1.Id})
 		require.NoError(t, err)
-		assert.False(t, isUserError)
-		assert.Contains(t, resp.Text, "Message successfully attached to thread")
+		assert.NoError(t, isUserError)
+		assert.Contains(t, resp, "Message successfully attached to thread")
 	})
 }

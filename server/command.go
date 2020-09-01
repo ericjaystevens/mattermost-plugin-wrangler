@@ -68,6 +68,7 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 
 	wranglerParser := p.slashCommand
 
+	//this block goes away when all command strings are handled by Execute
 	slashCommand, values, err := wranglerParser.Parse(args.Command)
 	if err != nil {
 		return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, err.Error()), nil
@@ -83,10 +84,8 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 
 	//hopefully this switch statement can go away and slashCommand.Execute() can replace it.
 	switch slashCommand {
-	case "wrangler move thread", "wrangler copy thread":
+	case "wrangler move thread", "wrangler copy thread", "wrangler attach message":
 		msg, _, handlerErr = p.slashCommand.Execute(args.Command, args)
-	case "wrangler attach message":
-		resp, userError, handlerErr = p.runAttachMessageCommand(values, args)
 	case "wrangler list channels":
 		resp, userError, handlerErr = p.runListChannelsCommand(values, args)
 	case "wrangler list messages":

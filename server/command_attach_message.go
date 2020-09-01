@@ -18,35 +18,36 @@ func getAttachMessageCommand() string {
 	return codeBlock(attachMessageCommand)
 }
 
-func (p *Plugin) runAttachMessageCommand(values map[string]string, extra *model.CommandArgs) (*model.CommandResponse, bool, error) {
+func (p *Plugin) runAttachMessageCommand(values map[string]string, commandArgs interface{}) (string, error, error) {
 
 	postToBeAttachedID := values["messageID"]
 	postToAttachToID := values["rootMessageID"]
+	extra := commandArgs.(*model.CommandArgs)
 
 	if postToBeAttachedID == postToAttachToID {
-		return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, "Error: the two provided message IDs should not be the same"), true, nil
+		return "Error: the two provided message IDs should not be the same", nil, nil
 	}
 
 	postToBeAttached, appErr := p.API.GetPost(postToBeAttachedID)
 	if appErr != nil {
-		return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, fmt.Sprintf("Error: unable to get message with ID %s; ensure this is correct", postToBeAttachedID)), true, nil
+		return fmt.Sprintf("Error: unable to get message with ID %s; ensure this is correct", postToBeAttachedID), nil, nil
 	}
 	postToAttachTo, appErr := p.API.GetPost(postToAttachToID)
 	if appErr != nil {
-		return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, fmt.Sprintf("Error: unable to get message with ID %s; ensure this is correct", postToAttachToID)), true, nil
+		return fmt.Sprintf("Error: unable to get message with ID %s; ensure this is correct", postToAttachToID), nil, nil
 	}
 
 	if postToBeAttached.ChannelId != extra.ChannelId {
-		return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, "Error: the attach command must be run from the channel containing the messages"), true, nil
+		return "Error: the attach command must be run from the channel containing the messages", nil, nil
 	}
 	if postToAttachTo.ChannelId != extra.ChannelId {
-		return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, "Error: unable to attach message to a thread in another channel"), true, nil
+		return "Error: unable to attach message to a thread in another channel", nil, nil
 	}
 	if len(postToBeAttached.RootId) != 0 || len(postToBeAttached.ParentId) != 0 {
-		return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, "Error: the message to be attached is already part of a thread"), true, nil
+		return "Error: the message to be attached is already part of a thread", nil, nil
 	}
 	if extra.RootId == postToBeAttached.Id || extra.ParentId == postToBeAttached.Id {
-		return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, "Error: the 'attach message' command cannot be run from inside the thread of the message being attached; please run directly in the channel containing the message you wish to attach"), true, nil
+		return "Error: the 'attach message' command cannot be run from inside the thread of the message being attached; please run directly in the channel containing the message you wish to attach", nil, nil
 	}
 
 	// We now know:
@@ -58,7 +59,7 @@ func (p *Plugin) runAttachMessageCommand(values map[string]string, extra *model.
 
 	currentTeam, appErr := p.API.GetTeam(extra.TeamId)
 	if appErr != nil {
-		return nil, false, errors.Wrap(appErr, "failed to lookup lookup team")
+		return "", errors.Wrap(appErr, "failed to lookup lookup team"), errors.Wrap(appErr, "failed to lookup lookup team")
 	}
 
 	newRootID := postToAttachTo.Id
@@ -86,15 +87,15 @@ func (p *Plugin) runAttachMessageCommand(values map[string]string, extra *model.
 		for _, fileID := range postToBeAttached.FileIds {
 			oldFileInfo, appErr = p.API.GetFileInfo(fileID)
 			if appErr != nil {
-				return nil, false, errors.Wrap(appErr, "unable to lookup file info to re-upload")
+				return "", errors.Wrap(appErr, "unable to lookup file info to re-upload"), errors.Wrap(appErr, "unable to lookup file info to re-upload")
 			}
 			fileBytes, appErr = p.API.GetFile(fileID)
 			if appErr != nil {
-				return nil, false, errors.Wrap(appErr, "unable to get file bytes to re-upload")
+				return "", errors.Wrap(appErr, "unable to get file bytes to re-upload"), errors.Wrap(appErr, "unable to get file bytes to re-upload")
 			}
 			newFileInfo, appErr = p.API.UploadFile(fileBytes, postToBeAttached.ChannelId, oldFileInfo.Name)
 			if appErr != nil {
-				return nil, false, errors.Wrap(appErr, "unable to re-upload file")
+				return "", errors.Wrap(appErr, "unable to re-upload file"), errors.Wrap(appErr, "unable to re-upload file")
 			}
 
 			newFileIDs = append(newFileIDs, newFileInfo.Id)
@@ -106,7 +107,7 @@ func (p *Plugin) runAttachMessageCommand(values map[string]string, extra *model.
 	// Store reactions to be reapplied later.
 	reactions, appErr := p.API.GetReactions(postToBeAttached.Id)
 	if appErr != nil {
-		return nil, false, errors.Wrap(appErr, "failed to get reactions on original post")
+		return "", errors.Wrap(appErr, "failed to get reactions on original post"), errors.Wrap(appErr, "failed to get reactions on original post")
 	}
 
 	cleanPostID(postToBeAttached)
@@ -115,7 +116,7 @@ func (p *Plugin) runAttachMessageCommand(values map[string]string, extra *model.
 
 	newPost, appErr := p.API.CreatePost(postToBeAttached)
 	if appErr != nil {
-		return nil, false, errors.Wrap(appErr, "failed to create new post")
+		return "", errors.Wrap(appErr, "failed to create new post"), errors.Wrap(appErr, "failed to create new post")
 	}
 
 	for _, reaction := range reactions {
@@ -128,7 +129,7 @@ func (p *Plugin) runAttachMessageCommand(values map[string]string, extra *model.
 
 	appErr = p.API.DeletePost(cleanupID)
 	if appErr != nil {
-		return nil, false, errors.Wrap(appErr, "unable to delete post")
+		return "", errors.Wrap(appErr, "unable to delete post"), errors.Wrap(appErr, "unable to delete post")
 	}
 
 	p.API.LogInfo("Wrangler has attached a message",
@@ -151,7 +152,7 @@ func (p *Plugin) runAttachMessageCommand(values map[string]string, extra *model.
 
 	msg := fmt.Sprintf("Message successfully attached to thread")
 
-	return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, msg), false, nil
+	return msg, nil, nil
 }
 
 func (p *Plugin) postAttachMessageBotDM(userID, newPostLink string) error {
