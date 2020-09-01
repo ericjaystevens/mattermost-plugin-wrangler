@@ -74,5 +74,6 @@ func (p *Plugin) OnActivate() error {
 	p.slashCommand.SetHandler("wrangler move thread", p.runMoveThreadCommand)
 	p.slashCommand.SetHandler("wrangler copy thread", p.runCopyThreadCommand)
 	p.slashCommand.SetHandler("wrangler attach message", p.runAttachMessageCommand)
+	p.slashCommand.SetHandler("wrangler list channels", p.runListChannelsCommand)
 	return p.API.RegisterCommand(getCommand(config.CommandAutoCompleteEnable))
 }

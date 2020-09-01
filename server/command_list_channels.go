@@ -48,11 +48,12 @@ func parseListChannelsArgs(args []string) (listChannelsOptions, error) {
 	return options, nil
 }
 
-func (p *Plugin) runListChannelsCommand(values map[string]string, extra *model.CommandArgs) (*model.CommandResponse, bool, error) {
+func (p *Plugin) runListChannelsCommand(values map[string]string, commandArgs interface{}) (string, error, error) {
 
+	extra := commandArgs.(*model.CommandArgs)
 	teams, appErr := p.API.GetTeamsForUser(extra.UserId)
 	if appErr != nil {
-		return nil, false, appErr
+		return "", appErr, appErr
 	}
 
 	var msg string
@@ -63,7 +64,7 @@ func (p *Plugin) runListChannelsCommand(values map[string]string, extra *model.C
 
 		channels, appErr := p.API.GetChannelsForTeamForUser(team.Id, extra.UserId, false)
 		if appErr != nil {
-			return nil, false, appErr
+			return "", appErr, appErr
 		}
 
 		var filteredChannels []*model.Channel
@@ -93,5 +94,5 @@ func (p *Plugin) runListChannelsCommand(values map[string]string, extra *model.C
 		msg = "No results found"
 	}
 
-	return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, msg), false, nil
+	return msg, nil, nil
 }

@@ -84,10 +84,8 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 
 	//hopefully this switch statement can go away and slashCommand.Execute() can replace it.
 	switch slashCommand {
-	case "wrangler move thread", "wrangler copy thread", "wrangler attach message":
+	case "wrangler move thread", "wrangler copy thread", "wrangler attach message", "wrangler list channels":
 		msg, _, handlerErr = p.slashCommand.Execute(args.Command, args)
-	case "wrangler list channels":
-		resp, userError, handlerErr = p.runListChannelsCommand(values, args)
 	case "wrangler list messages":
 		resp, userError, handlerErr = p.runListMessagesCommand(values, args)
 	case "wrangler info":
