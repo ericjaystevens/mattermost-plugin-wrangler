@@ -13,6 +13,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const generatedHelp = `
+What the help should look like
+`
+const invalidCommandMsg = "__Error: Unable to find matching subcommand__\n\nRun `/wrangler help` for usage instructions."
+
 func TestCommand(t *testing.T) {
 	context := &plugin.Context{}
 
@@ -24,22 +29,30 @@ func TestCommand(t *testing.T) {
 	api := &plugintest.API{}
 	api.On("GetUser", commandUser.Id).Return(commandUser, nil)
 	api.On("GetUser", mock.AnythingOfType("string"), mock.Anything, mock.Anything).Return(nil, &model.AppError{DetailedError: "invalid user"})
+	api.On("LogError", mock.AnythingOfType("string"))
 
 	var plugin Plugin
 	plugin.SetAPI(api)
 	configPath := `/home/ec2-user/code/mattermost-plugin-wrangler/wrangler.yaml`
+
 	slashDef, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		t.Error()
 	}
 	plugin.slashCommand, _ = slashparse.NewSlashCommand(slashDef)
+	plugin.slashCommand.SetHandler("wrangler move thread", plugin.runMoveThreadCommand)
+	plugin.slashCommand.SetHandler("wrangler copy thread", plugin.runCopyThreadCommand)
+	plugin.slashCommand.SetHandler("wrangler attach message", plugin.runAttachMessageCommand)
+	plugin.slashCommand.SetHandler("wrangler list channels", plugin.runListChannelsCommand)
+	plugin.slashCommand.SetHandler("wrangler list messages", plugin.runListMessagesCommand)
+	plugin.slashCommand.SetHandler("wrangler info", plugin.runInfoCommand)
 
 	t.Run("args", func(t *testing.T) {
 		t.Run("no args", func(t *testing.T) {
 			args := &model.CommandArgs{}
 			resp, appErr := plugin.ExecuteCommand(context, args)
 			require.Nil(t, appErr)
-			require.Equal(t, getHelp(), resp.Text)
+			require.Equal(t, "Unable to find matching subcommand", resp.Text)
 		})
 
 		t.Run("one arg", func(t *testing.T) {
@@ -125,10 +138,10 @@ func TestCommand(t *testing.T) {
 		args := &model.CommandArgs{Command: "wrangler info"}
 		resp, appErr := plugin.ExecuteCommand(context, args)
 		require.Nil(t, appErr)
-		infoResp, userError, err := plugin.runInfoCommand([]string{}, nil)
+		infoResp, userError, err := plugin.runInfoCommand(map[string]string{}, nil)
 		require.NoError(t, err)
-		assert.False(t, userError)
-		assert.Equal(t, infoResp, resp)
+		assert.NoError(t, userError)
+		assert.Equal(t, infoResp, resp.Text)
 	})
 
 	t.Run("allowed email domain", func(t *testing.T) {
@@ -155,10 +168,10 @@ func TestCommand(t *testing.T) {
 			}
 			resp, appErr := plugin.ExecuteCommand(context, args)
 			require.Nil(t, appErr)
-			infoResp, userError, err := plugin.runInfoCommand([]string{}, nil)
+			infoResp, userError, err := plugin.runInfoCommand(map[string]string{}, nil)
 			require.NoError(t, err)
-			assert.False(t, userError)
-			assert.Equal(t, resp, infoResp)
+			assert.NoError(t, userError)
+			assert.Equal(t, infoResp, resp.Text)
 		})
 
 		t.Run("enabled, invalid user", func(t *testing.T) {
@@ -185,10 +198,10 @@ func TestCommand(t *testing.T) {
 				}
 				resp, appErr := plugin.ExecuteCommand(context, args)
 				require.Nil(t, appErr)
-				infoResp, userError, err := plugin.runInfoCommand([]string{}, nil)
+				infoResp, userError, err := plugin.runInfoCommand(map[string]string{}, nil)
 				require.NoError(t, err)
-				assert.False(t, userError)
-				assert.Equal(t, infoResp, resp)
+				assert.NoError(t, userError)
+				assert.Equal(t, infoResp, resp.Text)
 			})
 
 			t.Run("user in second domain", func(t *testing.T) {
@@ -202,10 +215,10 @@ func TestCommand(t *testing.T) {
 				}
 				resp, appErr := plugin.ExecuteCommand(context, args)
 				require.Nil(t, appErr)
-				infoResp, userError, err := plugin.runInfoCommand([]string{}, nil)
+				infoResp, userError, err := plugin.runInfoCommand(map[string]string{}, nil)
 				require.NoError(t, err)
-				assert.False(t, userError)
-				assert.Equal(t, infoResp, resp)
+				assert.NoError(t, userError)
+				assert.Equal(t, infoResp, resp.Text)
 			})
 
 			t.Run("user in neither domain", func(t *testing.T) {
@@ -233,10 +246,10 @@ func TestCommand(t *testing.T) {
 				}
 				resp, appErr := plugin.ExecuteCommand(context, args)
 				require.Nil(t, appErr)
-				infoResp, userError, err := plugin.runInfoCommand([]string{}, nil)
+				infoResp, userError, err := plugin.runInfoCommand(map[string]string{}, nil)
 				require.NoError(t, err)
-				assert.False(t, userError)
-				assert.Equal(t, infoResp, resp)
+				assert.NoError(t, userError)
+				assert.Equal(t, infoResp, resp.Text)
 			})
 		})
 	})

@@ -50,21 +50,22 @@ func validateLength(value string) (length int, err error) {
 	return
 }
 
-func (p *Plugin) runListMessagesCommand(values map[string]string, extra *model.CommandArgs) (*model.CommandResponse, bool, error) {
+func (p *Plugin) runListMessagesCommand(values map[string]string, commandArgs interface{}) (string, error, error) {
+	extra := commandArgs.(*model.CommandArgs)
 
 	count, err := validateCount(values["count"])
 	if err != nil {
-		return nil, true, err
+		return "", err, err
 	}
 
 	length, err := validateLength(values["trim-length"])
 	if err != nil {
-		return nil, true, err
+		return "", err, err
 	}
 
 	channelPosts, appErr := p.API.GetPostsForChannel(extra.ChannelId, 0, count)
 	if appErr != nil {
-		return nil, false, appErr
+		return "", appErr, appErr
 	}
 
 	msg := fmt.Sprintf("The last %d messages in this channel:\n", count)
@@ -78,5 +79,5 @@ func (p *Plugin) runListMessagesCommand(values map[string]string, extra *model.C
 
 	msg = codeBlock(strings.TrimRight(msg, "\n"))
 
-	return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, msg), false, nil
+	return msg, nil, nil
 }

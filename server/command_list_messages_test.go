@@ -28,62 +28,62 @@ func TestMessagelListCommand(t *testing.T) {
 		//slashparse will use default values if switches are not used.
 		resp, isUserError, err := plugin.runListMessagesCommand(map[string]string{"count": "20", "trim-length": "50"}, &model.CommandArgs{ChannelId: testChannel.Id})
 		require.NoError(t, err)
-		assert.False(t, isUserError)
+		assert.NoError(t, isUserError)
 		for _, post := range testPostList.ToSlice() {
-			assert.Contains(t, resp.Text, post.Id)
-			assert.Contains(t, resp.Text, post.Message)
+			assert.Contains(t, resp, post.Id)
+			assert.Contains(t, resp, post.Message)
 		}
 	})
 
 	t.Run("specify valid count", func(t *testing.T) {
 		resp, isUserError, err := plugin.runListMessagesCommand(map[string]string{"count": "50", "trim-length": "50"}, &model.CommandArgs{ChannelId: testChannel.Id})
 		require.NoError(t, err)
-		assert.False(t, isUserError)
-		assert.Contains(t, resp.Text, "The last 50 messages in this channel")
+		assert.NoError(t, isUserError)
+		assert.Contains(t, resp, "The last 50 messages in this channel")
 		for _, post := range testPostList.ToSlice() {
-			assert.Contains(t, resp.Text, post.Id)
-			assert.Contains(t, resp.Text, post.Message)
-			assert.Contains(t, resp.Text, post.Message)
+			assert.Contains(t, resp, post.Id)
+			assert.Contains(t, resp, post.Message)
+			assert.Contains(t, resp, post.Message)
 		}
 	})
 
 	t.Run("specify count that is too low", func(t *testing.T) {
 		_, isUserError, err := plugin.runListMessagesCommand(map[string]string{"count": "-1", "trim-length": "50"}, &model.CommandArgs{ChannelId: testChannel.Id})
 		require.Error(t, err)
-		assert.True(t, isUserError)
+		assert.Error(t, isUserError)
 		assert.Contains(t, err.Error(), "count (-1) must be between 1 and 100")
 	})
 
 	t.Run("specify count that is too high", func(t *testing.T) {
 		_, isUserError, err := plugin.runListMessagesCommand(map[string]string{"count": "120", "trim-length": "50"}, &model.CommandArgs{ChannelId: testChannel.Id})
 		require.Error(t, err)
-		assert.True(t, isUserError)
+		assert.Error(t, isUserError)
 		assert.Contains(t, err.Error(), "count (120) must be between 1 and 100")
 	})
 
 	t.Run("specify valid trim-length", func(t *testing.T) {
 		resp, isUserError, err := plugin.runListMessagesCommand(map[string]string{"count": "20", "trim-length": "60"}, &model.CommandArgs{ChannelId: testChannel.Id})
 		require.NoError(t, err)
-		assert.False(t, isUserError)
-		assert.Contains(t, resp.Text, "The last 20 messages in this channel")
+		assert.NoError(t, isUserError)
+		assert.Contains(t, resp, "The last 20 messages in this channel")
 		for _, post := range testPostList.ToSlice() {
-			assert.Contains(t, resp.Text, post.Id)
-			assert.Contains(t, resp.Text, post.Message)
-			assert.Contains(t, resp.Text, post.Message)
+			assert.Contains(t, resp, post.Id)
+			assert.Contains(t, resp, post.Message)
+			assert.Contains(t, resp, post.Message)
 		}
 	})
 
 	t.Run("specify trim-length that is too low", func(t *testing.T) {
 		_, isUserError, err := plugin.runListMessagesCommand(map[string]string{"count": "20", "trim-length": "-1"}, &model.CommandArgs{ChannelId: testChannel.Id})
 		require.Error(t, err)
-		assert.True(t, isUserError)
+		assert.Error(t, isUserError)
 		assert.Contains(t, err.Error(), "trim-length (-1) must be between 10 and 500")
 	})
 
 	t.Run("specify trim-length that is too high", func(t *testing.T) {
 		_, isUserError, err := plugin.runListMessagesCommand(map[string]string{"count": "20", "trim-length": "600"}, &model.CommandArgs{ChannelId: testChannel.Id})
 		require.Error(t, err)
-		assert.True(t, isUserError)
+		assert.Error(t, isUserError)
 		assert.Contains(t, err.Error(), "trim-length (600) must be between 10 and 500")
 	})
 
@@ -98,8 +98,8 @@ func TestMessagelListCommand(t *testing.T) {
 
 		resp, isUserError, err := plugin.runListMessagesCommand(map[string]string{"count": "20", "trim-length": "50"}, &model.CommandArgs{ChannelId: testChannel.Id})
 		require.NoError(t, err)
-		assert.False(t, isUserError)
-		assert.Contains(t, resp.Text, "[     system message     ] - <skipped>")
+		assert.NoError(t, isUserError)
+		assert.Contains(t, resp, "[     system message     ] - <skipped>")
 	})
 }
 
