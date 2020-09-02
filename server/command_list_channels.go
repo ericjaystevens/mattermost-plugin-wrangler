@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/mattermost/mattermost-server/v5/model"
@@ -50,7 +51,11 @@ func parseListChannelsArgs(args []string) (listChannelsOptions, error) {
 
 func (p *Plugin) runListChannelsCommand(values map[string]string, commandArgs interface{}) (string, error, error) {
 
-	extra := commandArgs.(*model.CommandArgs)
+	extra, ok := commandArgs.(*model.CommandArgs)
+	if !ok {
+		return "type mismatch error", fmt.Errorf("Expected type *model.CommandArgs actual: %s", reflect.TypeOf(commandArgs)), fmt.Errorf("Expected type *model.CommandArgs actual: %s", reflect.TypeOf(commandArgs))
+	}
+
 	teams, appErr := p.API.GetTeamsForUser(extra.UserId)
 	if appErr != nil {
 		return "", appErr, appErr

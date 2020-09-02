@@ -35,14 +35,19 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 		return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, "Permission denied. Please talk to your system administrator to get access."), nil
 	}
 
-	msg, userErr, handlerErr := p.slashCommand.Execute(args.Command, args)
+	msg, userError, handlerErr := p.slashCommand.Execute(args.Command, args)
 
-	if userErr != nil {
+	if handlerErr != nil {
 		p.API.LogError(handlerErr.Error())
-		return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, userErr.Error()), nil
+
+		if userError != nil {
+			return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, userError.Error()), nil
+		}
+
+		return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, "unknown error see logs for details."), nil
 	}
 
-	return model.CommandResponseFromPlainText(msg), nil
+	return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, msg), nil
 }
 
 func (p *Plugin) runInfoCommand(nada map[string]string, extra interface{}) (string, error, error) {
